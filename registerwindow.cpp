@@ -1,95 +1,122 @@
 #include "registerwindow.h"
 #include <QMessageBox>
-
+#include <QFormLayout>
+#include <QVBoxLayout>
 
 RegisterWindow::RegisterWindow(QWidget *parent)
-    :QMainWindow(parent)
+    : QMainWindow(parent)
 {
+    // 设置窗口标题和大小
+    setWindowTitle("用户注册");
+    resize(400, 300);
 
-    // 提示：设置窗口标题和大小
-    setWindowTitle("Register");
-    resize(400,300);
+    // 设置窗口背景样式
+    setStyleSheet("QMainWindow { background-color: #f0f4f8; }");
 
-    // 提示：创建中心部件和垂直布局（QVBoxLayout）
+    // 创建中心部件和主垂直布局
     QWidget *centralWidget = new QWidget(this);
-    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    mainLayout->setContentsMargins(20, 20, 20, 20); // 设置布局边距
+    mainLayout->setSpacing(10); // 设置控件间距
 
-    // 提示：添加用户名标签和输入框
-    registerUsernameLable = new QLabel("registerUsername:",centralWidget);
+    // 创建表单布局
+    QFormLayout *formLayout = new QFormLayout();
+    formLayout->setSpacing(10); // 设置表单内间距
+
+    // 添加用户名标签和输入框
+    registerUsernameLable = new QLabel("用户名:", centralWidget);
+    registerUsernameLable->setStyleSheet("font: 14px 'Arial'; color: #333;");
     registerUsernameEdit = new QLineEdit(centralWidget);
-    layout->addWidget(registerUsernameLable);
-    layout->addWidget(registerUsernameEdit);
+    registerUsernameEdit->setPlaceholderText("请输入用户名");
+    registerUsernameEdit->setStyleSheet(
+        "QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }"
+        "QLineEdit:focus { border-color: #007bff; }");
+    formLayout->addRow(registerUsernameLable, registerUsernameEdit);
 
-    // 提示：添加密码标签和输入框（设置为密码模式）
-    registerPasswordLable = new QLabel("Password:",centralWidget);
+    // 添加密码标签和输入框
+    registerPasswordLable = new QLabel("密码:", centralWidget);
+    registerPasswordLable->setStyleSheet("font: 14px 'Arial'; color: #333;");
     registerPasswordEdit = new QLineEdit(centralWidget);
-    registerPasswordEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
-    layout->addWidget(registerPasswordLable);
-    layout->addWidget(registerPasswordEdit);
+    registerPasswordEdit->setEchoMode(QLineEdit::Password);
+    registerPasswordEdit->setPlaceholderText("请输入密码");
+    registerPasswordEdit->setStyleSheet(
+        "QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }"
+        "QLineEdit:focus { border-color: #007bff; }");
+    formLayout->addRow(registerPasswordLable, registerPasswordEdit);
 
-    // 提示：添加确认密码标签和输入框（设置为密码模式）
-    confirmPasswordLable = new QLabel("Confirm Password:",centralWidget);
+    // 添加确认密码标签和输入框
+    confirmPasswordLable = new QLabel("确认密码:", centralWidget);
+    confirmPasswordLable->setStyleSheet("font: 14px 'Arial'; color: #333;");
     confirmPasswordEdit = new QLineEdit(centralWidget);
-    confirmPasswordEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
-    layout->addWidget(confirmPasswordLable);
-    layout->addWidget(confirmPasswordEdit);
+    confirmPasswordEdit->setEchoMode(QLineEdit::Password);
+    confirmPasswordEdit->setPlaceholderText("请再次输入密码");
+    confirmPasswordEdit->setStyleSheet(
+        "QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }"
+        "QLineEdit:focus { border-color: #007bff; }");
+    formLayout->addRow(confirmPasswordLable, confirmPasswordEdit);
 
-    // 提示：添加提交按钮
-    submitButton = new QPushButton("Submit", centralWidget);
-    layout->addWidget(submitButton);
+    // 添加提交按钮
+    submitButton = new QPushButton("提交", centralWidget);
+    submitButton->setStyleSheet(
+        "QPushButton { background-color: #007bff; color: white; border-radius: 5px; padding: 8px; font: 14px 'Arial'; }"
+        "QPushButton:hover { background-color: #0056b3; }"
+        "QPushButton:pressed { background-color: #003d80; }");
+    formLayout->addRow(submitButton);
 
-    // 提示：添加返回登录按钮
-    returnLoginButton = new QPushButton("Return to Login", centralWidget);
-    layout->addWidget(returnLoginButton);
+    // 添加返回登录按钮
+    returnLoginButton = new QPushButton("返回登录", centralWidget);
+    returnLoginButton->setStyleSheet(
+        "QPushButton { background-color: #6c757d; color: white; border-radius: 5px; padding: 8px; font: 14px 'Arial'; }"
+        "QPushButton:hover { background-color: #5a6268; }"
+        "QPushButton:pressed { background-color: #4b545c; }");
+    formLayout->addRow(returnLoginButton);
 
-    // 提示：添加伸缩项使布局居中
-    layout->addStretch();
+    // 将表单布局添加到主垂直布局，并添加弹性空间实现居中
+    mainLayout->addStretch();
+    mainLayout->addLayout(formLayout);
+    mainLayout->addStretch();
 
-    // 提示：设置中心部件
+    // 设置中心部件
     setCentralWidget(centralWidget);
 
-    // 提示：连接信号和槽（如提交按钮和返回按钮的clicked信号）
-    connect(submitButton,&QPushButton::clicked,this,&RegisterWindow::onSubmitClicked);
-    connect(returnLoginButton,&QPushButton::clicked,this,&RegisterWindow::onBackToLoginClicked);
-
+    // 连接信号和槽
+    connect(submitButton, &QPushButton::clicked, this, &RegisterWindow::onSubmitClicked);
+    connect(returnLoginButton, &QPushButton::clicked, this, &RegisterWindow::onBackToLoginClicked);
 }
+
 RegisterWindow::~RegisterWindow()
 {
-    // 提示：通常无需手动清理，Qt父子关系会自动管理内存
+    // Qt 父子关系自动管理内存，无需手动清理
 }
 
 void RegisterWindow::onSubmitClicked()
 {
-    // 提示：获取用户名、密码、确认密码的输入内容
-    QString  registerUsername = registerUsernameEdit->text();
-    QString registerPassword = registerPasswordEdit->text();
+    // 获取输入内容
+    QString username = registerUsernameEdit->text();
+    QString password = registerPasswordEdit->text();
     QString confirmPassword = confirmPasswordEdit->text();
 
-
-    // 提示：验证密码和确认密码是否一致
-    bool isEmpty = (registerUsername.isEmpty()||registerPassword.isEmpty()||confirmPassword.isEmpty());
-    if(isEmpty){
-        QMessageBox::warning(this,"mistake",
-                                 "the username/password is empty, please rewrite");
+    // 检查是否有空输入
+    if (username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+        QMessageBox::warning(this, "输入错误", "用户名或密码不能为空，请重新输入！");
         return;
+    }
 
-    };
-    if(!(registerPassword == confirmPassword)){
-        QMessageBox::warning(this,"mistake","the password is incorrect");
+    // 验证密码和确认密码是否一致
+    if (password != confirmPassword) {
+        QMessageBox::warning(this, "密码错误", "两次输入的密码不一致，请重新输入！");
         return;
-    };
+    }
 
+    // 注册成功，显示成功消息
+    QMessageBox::information(this, "注册结果", "注册成功！");
 
-    // 提示：显示注册成功或失败的消息（使用QMessageBox）
-        QMessageBox::information(this,"message","sucess");
-
-    // 提示：可选 - 将数据保存到数据库或文件
+    // 可选：将数据保存到数据库或文件（待实现）
 }
 
 void RegisterWindow::onBackToLoginClicked()
 {
-    // 提示：关闭当前窗口并返回登录窗口
+    // 关闭当前窗口并显示登录窗口
     parentWidget()->show();
     this->close();
-    // 提示：可选 - 发射信号通知LoginWindow显示
 }
