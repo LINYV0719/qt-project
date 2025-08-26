@@ -1,41 +1,68 @@
 #include "resetpasswordwindow.h"
 #include <QMessageBox>
+#include <QFormLayout>
+#include <QVBoxLayout>
 
 ResetPasswordWindow::ResetPasswordWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     // 设置窗口标题和大小
-    setWindowTitle("Reset Password");
+    setWindowTitle("重置密码");
     resize(400, 300);
 
-    // 创建中心部件和垂直布局
+    // 设置窗口背景样式
+    setStyleSheet("QMainWindow { background-color: #f0f4f8; }");
+
+    // 创建中心部件和主垂直布局
     QWidget *centralWidget = new QWidget(this);
-    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    mainLayout->setContentsMargins(20, 20, 20, 20); // 设置布局边距
+    mainLayout->setSpacing(10); // 设置控件间距
+
+    // 创建表单布局
+    QFormLayout *formLayout = new QFormLayout();
+    formLayout->setSpacing(10); // 设置表单内间距
 
     // 添加邮箱标签和输入框
-    QLabel *emailLabel = new QLabel("Email:", centralWidget);
+    QLabel *emailLabel = new QLabel("邮箱:", centralWidget);
+    emailLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
     emailEdit = new QLineEdit(centralWidget);
     emailEdit->setPlaceholderText("请输入邮箱");
-    layout->addWidget(emailLabel);
-    layout->addWidget(emailEdit);
+    emailEdit->setStyleSheet(
+        "QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }"
+        "QLineEdit:focus { border-color: #007bff; }");
+    formLayout->addRow(emailLabel, emailEdit);
 
     // 添加验证码标签和输入框
-    QLabel *codeLabel = new QLabel("Verification Code:", centralWidget);
+    QLabel *codeLabel = new QLabel("验证码:", centralWidget);
+    codeLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
     codeEdit = new QLineEdit(centralWidget);
     codeEdit->setPlaceholderText("请输入验证码");
-    layout->addWidget(codeLabel);
-    layout->addWidget(codeEdit);
+    codeEdit->setStyleSheet(
+        "QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }"
+        "QLineEdit:focus { border-color: #007bff; }");
+    formLayout->addRow(codeLabel, codeEdit);
 
     // 添加提交按钮
-    submitButton = new QPushButton("Submit", centralWidget);
-    layout->addWidget(submitButton);
+    submitButton = new QPushButton("提交", centralWidget);
+    submitButton->setStyleSheet(
+        "QPushButton { background-color: #007bff; color: white; border-radius: 5px; padding: 8px; font: 14px 'Arial'; }"
+        "QPushButton:hover { background-color: #0056b3; }"
+        "QPushButton:pressed { background-color: #003d80; }");
+    formLayout->addRow(submitButton);
 
     // 添加返回登录按钮
-    returnLoginButton = new QPushButton("Return to Login", centralWidget);
-    layout->addWidget(returnLoginButton);
+    returnLoginButton = new QPushButton("返回登录", centralWidget);
+    returnLoginButton->setStyleSheet(
+        "QPushButton { background-color: #6c757d; color: white; border-radius: 5px; padding: 8px; font: 14px 'Arial'; }"
+        "QPushButton:hover { background-color: #5a6268; }"
+        "QPushButton:pressed { background-color: #4b545c; }");
+    formLayout->addRow(returnLoginButton);
 
-    // 添加伸缩项使布局居中
-    layout->addStretch();
+    // 将表单布局添加到主垂直布局，并添加弹性空间实现居中
+    mainLayout->addStretch();
+    mainLayout->addLayout(formLayout);
+    mainLayout->addStretch();
 
     // 设置中心部件
     setCentralWidget(centralWidget);
