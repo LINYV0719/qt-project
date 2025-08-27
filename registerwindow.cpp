@@ -1,95 +1,364 @@
-#include "registerwindow.h"
+#include "loginwindow.h"
 #include <QMessageBox>
-
+#include <QFormLayout>
+#include <QVBoxLayout>
+#include <QRegularExpression>
+#include <QFile>
+#include <QTextStream>
 
 RegisterWindow::RegisterWindow(QWidget *parent)
-    :QMainWindow(parent)
+    : QMainWindow(parent)
 {
+    // 设置窗口标题和大小
+    setWindowTitle("用户注册");
+    resize(400, 400);
 
-    // 提示：设置窗口标题和大小
-    setWindowTitle("Register");
-    resize(400,300);
+    // 设置窗口背景样式
+    setStyleSheet("QMainWindow { background-color: #f0f4f8; }");
 
-    // 提示：创建中心部件和垂直布局（QVBoxLayout）
+    // 创建中心部件和主垂直布局
     QWidget *centralWidget = new QWidget(this);
-    QVBoxLayout *layout = new QVBoxLayout(centralWidget);
+    QVBoxLayout *mainLayout = new QVBoxLayout(centralWidget);
+    mainLayout->setContentsMargins(20, 20, 20, 20);
+    mainLayout->setSpacing(10);
 
-    // 提示：添加用户名标签和输入框
-    registerUsernameLable = new QLabel("registerUsername:",centralWidget);
-    registerUsernameEdit = new QLineEdit(centralWidget);
-    layout->addWidget(registerUsernameLable);
-    layout->addWidget(registerUsernameEdit);
+    // 角色选择
+    roleCombo = new QComboBox(centralWidget);
+    roleCombo->addItems({"患者", "医生"});
+    roleCombo->setStyleSheet("QComboBox { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    mainLayout->addWidget(new QLabel("角色:", centralWidget));
+    mainLayout->addWidget(roleCombo);
 
-    // 提示：添加密码标签和输入框（设置为密码模式）
-    registerPasswordLable = new QLabel("Password:",centralWidget);
-    registerPasswordEdit = new QLineEdit(centralWidget);
-    registerPasswordEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
-    layout->addWidget(registerPasswordLable);
-    layout->addWidget(registerPasswordEdit);
+    // 创建堆叠窗口
+    stackedWidget = new QStackedWidget(centralWidget);
 
-    // 提示：添加确认密码标签和输入框（设置为密码模式）
-    confirmPasswordLable = new QLabel("Confirm Password:",centralWidget);
-    confirmPasswordEdit = new QLineEdit(centralWidget);
-    confirmPasswordEdit->setEchoMode(QLineEdit::PasswordEchoOnEdit);
-    layout->addWidget(confirmPasswordLable);
-    layout->addWidget(confirmPasswordEdit);
+    // 患者注册页面
+    QWidget *patientWidget = new QWidget(centralWidget);
+    QFormLayout *patientLayout = new QFormLayout(patientWidget);
+    patientLayout->setSpacing(10);
 
-    // 提示：添加提交按钮
-    submitButton = new QPushButton("Submit", centralWidget);
-    layout->addWidget(submitButton);
+    patientNameLabel = new QLabel("姓名:", centralWidget);
+    patientNameLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    patientNameEdit = new QLineEdit(centralWidget);
+    patientNameEdit->setPlaceholderText("请输入姓名");
+    patientNameEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    patientLayout->addRow(patientNameLabel, patientNameEdit);
 
-    // 提示：添加返回登录按钮
-    returnLoginButton = new QPushButton("Return to Login", centralWidget);
-    layout->addWidget(returnLoginButton);
+    patientUsernameLabel = new QLabel("用户名:", centralWidget);
+    patientUsernameLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    patientUsernameEdit = new QLineEdit(centralWidget);
+    patientUsernameEdit->setPlaceholderText("请输入用户名");
+    patientUsernameEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    patientLayout->addRow(patientUsernameLabel, patientUsernameEdit);
 
-    // 提示：添加伸缩项使布局居中
-    layout->addStretch();
+    patientPasswordLabel = new QLabel("密码:", centralWidget);
+    patientPasswordLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    patientPasswordEdit = new QLineEdit(centralWidget);
+    patientPasswordEdit->setEchoMode(QLineEdit::Password);
+    patientPasswordEdit->setPlaceholderText("请输入密码");
+    patientPasswordEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    patientLayout->addRow(patientPasswordLabel, patientPasswordEdit);
 
-    // 提示：设置中心部件
+    patientConfirmPasswordLabel = new QLabel("确认密码:", centralWidget);
+    patientConfirmPasswordLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    patientConfirmPasswordEdit = new QLineEdit(centralWidget);
+    patientConfirmPasswordEdit->setEchoMode(QLineEdit::Password);
+    patientConfirmPasswordEdit->setPlaceholderText("请再次输入密码");
+    patientConfirmPasswordEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    patientLayout->addRow(patientConfirmPasswordLabel, patientConfirmPasswordEdit);
+
+    patientBirthdateLabel = new QLabel("出生日期:", centralWidget);
+    patientBirthdateLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    patientBirthdateEdit = new QLineEdit(centralWidget);
+    patientBirthdateEdit->setPlaceholderText("格式：YYYY-MM-DD");
+    patientBirthdateEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    patientLayout->addRow(patientBirthdateLabel, patientBirthdateEdit);
+
+    patientIdCardLabel = new QLabel("身份证号:", centralWidget);
+    patientIdCardLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    patientIdCardEdit = new QLineEdit(centralWidget);
+    patientIdCardEdit->setPlaceholderText("请输入18位身份证号");
+    patientIdCardEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    patientLayout->addRow(patientIdCardLabel, patientIdCardEdit);
+
+    patientPhoneLabel = new QLabel("手机号:", centralWidget);
+    patientPhoneLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    patientPhoneEdit = new QLineEdit(centralWidget);
+    patientPhoneEdit->setPlaceholderText("请输入11位手机号");
+    patientPhoneEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    patientLayout->addRow(patientPhoneLabel, patientPhoneEdit);
+
+    patientEmailLabel = new QLabel("邮箱:", centralWidget);
+    patientEmailLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    patientEmailEdit = new QLineEdit(centralWidget);
+    patientEmailEdit->setPlaceholderText("请输入邮箱");
+    patientEmailEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    patientLayout->addRow(patientEmailLabel, patientEmailEdit);
+
+    stackedWidget->addWidget(patientWidget);
+
+    // 医生注册页面
+    QWidget *doctorWidget = new QWidget(centralWidget);
+    QFormLayout *doctorLayout = new QFormLayout(doctorWidget);
+    doctorLayout->setSpacing(10);
+
+    doctorNameLabel = new QLabel("姓名:", centralWidget);
+    doctorNameLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    doctorNameEdit = new QLineEdit(centralWidget);
+    doctorNameEdit->setPlaceholderText("请输入姓名");
+    doctorNameEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    doctorLayout->addRow(doctorNameLabel, doctorNameEdit);
+
+    doctorUsernameLabel = new QLabel("用户名:", centralWidget);
+    doctorUsernameLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    doctorUsernameEdit = new QLineEdit(centralWidget);
+    doctorUsernameEdit->setPlaceholderText("请输入用户名");
+    doctorUsernameEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    doctorLayout->addRow(doctorUsernameLabel, doctorUsernameEdit);
+
+    doctorPasswordLabel = new QLabel("密码:", centralWidget);
+    doctorPasswordLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    doctorPasswordEdit = new QLineEdit(centralWidget);
+    doctorPasswordEdit->setEchoMode(QLineEdit::Password);
+    doctorPasswordEdit->setPlaceholderText("请输入密码");
+    doctorPasswordEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    doctorLayout->addRow(doctorPasswordLabel, doctorPasswordEdit);
+
+    doctorConfirmPasswordLabel = new QLabel("确认密码:", centralWidget);
+    doctorConfirmPasswordLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    doctorConfirmPasswordEdit = new QLineEdit(centralWidget);
+    doctorConfirmPasswordEdit->setEchoMode(QLineEdit::Password);
+    doctorConfirmPasswordEdit->setPlaceholderText("请再次输入密码");
+    doctorConfirmPasswordEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    doctorLayout->addRow(doctorConfirmPasswordLabel, doctorConfirmPasswordEdit);
+
+    doctorEmployeeIdLabel = new QLabel("工号:", centralWidget);
+    doctorEmployeeIdLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    doctorEmployeeIdEdit = new QLineEdit(centralWidget);
+    doctorEmployeeIdEdit->setPlaceholderText("请输入工号");
+    doctorEmployeeIdEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    doctorLayout->addRow(doctorEmployeeIdLabel, doctorEmployeeIdEdit);
+
+    doctorDepartmentLabel = new QLabel("科室:", centralWidget);
+    doctorDepartmentLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    doctorDepartmentCombo = new QComboBox(centralWidget);
+    doctorDepartmentCombo->addItems({"内科", "外科", "儿科", "急诊"});
+    doctorDepartmentCombo->setStyleSheet("QComboBox { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    doctorLayout->addRow(doctorDepartmentLabel, doctorDepartmentCombo);
+
+    doctorPhotoLabel = new QLabel("照片:", centralWidget);
+    doctorPhotoLabel->setStyleSheet("font: 14px 'Arial'; color: #333;");
+    doctorPhotoEdit = new QLineEdit(centralWidget);
+    doctorPhotoEdit->setPlaceholderText("选择照片文件");
+    doctorPhotoEdit->setStyleSheet("QLineEdit { border: 1px solid #ccc; border-radius: 5px; padding: 5px; }");
+    photoButton = new QPushButton("选择", centralWidget);
+    photoButton->setStyleSheet(
+        "QPushButton { background-color: #6c757d; color: white; border-radius: 5px; padding: 8px; font: 14px 'Arial'; }"
+        "QPushButton:hover { background-color: #5a6268; }"
+        "QPushButton:pressed { background-color: #4b545c; }");
+    QHBoxLayout *photoLayout = new QHBoxLayout();
+    photoLayout->addWidget(doctorPhotoEdit);
+    photoLayout->addWidget(photoButton);
+    doctorLayout->addRow(doctorPhotoLabel, photoLayout);
+
+    stackedWidget->addWidget(doctorWidget);
+
+    // 添加堆叠窗口到主布局
+    mainLayout->addWidget(stackedWidget);
+
+    // 提交按钮
+    submitButton = new QPushButton("提交", centralWidget);
+    submitButton->setStyleSheet(
+        "QPushButton { background-color: #007bff; color: white; border-radius: 5px; padding: 8px; font: 14px 'Arial'; }"
+        "QPushButton:hover { background-color: #0056b3; }"
+        "QPushButton:pressed { background-color: #003d80; }");
+    mainLayout->addWidget(submitButton);
+
+    // 返回登录按钮
+    returnLoginButton = new QPushButton("返回登录", centralWidget);
+    returnLoginButton->setStyleSheet(
+        "QPushButton { background-color: #6c757d; color: white; border-radius: 5px; padding: 8px; font: 14px 'Arial'; }"
+        "QPushButton:hover { background-color: #5a6268; }"
+        "QPushButton:pressed { background-color: #4b545c; }");
+    mainLayout->addWidget(returnLoginButton);
+
+    // 居中布局
+    mainLayout->addStretch();
+
+    // 设置中心部件
     setCentralWidget(centralWidget);
 
-    // 提示：连接信号和槽（如提交按钮和返回按钮的clicked信号）
-    connect(submitButton,&QPushButton::clicked,this,&RegisterWindow::onSubmitClicked);
-    connect(returnLoginButton,&QPushButton::clicked,this,&RegisterWindow::onBackToLoginClicked);
-
+    // 连接信号和槽
+    connect(roleCombo, &QComboBox::currentTextChanged, this, &RegisterWindow::onRoleChanged);
+    connect(submitButton, &QPushButton::clicked, this, &RegisterWindow::onSubmitClicked);
+    connect(returnLoginButton, &QPushButton::clicked, this, &RegisterWindow::onBackToLoginClicked);
+    connect(photoButton, &QPushButton::clicked, this, &RegisterWindow::onSelectPhoto);
 }
+
 RegisterWindow::~RegisterWindow()
 {
-    // 提示：通常无需手动清理，Qt父子关系会自动管理内存
+}
+
+void RegisterWindow::onRoleChanged(const QString &role)
+{
+    stackedWidget->setCurrentIndex(role == "患者" ? 0 : 1);
+}
+
+void RegisterWindow::onSelectPhoto()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, "选择照片", "", "Images (*.jpg *.png)");
+    if (!fileName.isEmpty()) {
+        doctorPhotoEdit->setText(fileName);
+    }
 }
 
 void RegisterWindow::onSubmitClicked()
 {
-    // 提示：获取用户名、密码、确认密码的输入内容
-    QString  registerUsername = registerUsernameEdit->text();
-    QString registerPassword = registerPasswordEdit->text();
-    QString confirmPassword = confirmPasswordEdit->text();
+    QString role = roleCombo->currentText();
+    QMap<QString, QString> parameters;
+    QString dirPath = "F:/CODE/QtProject/HospitalDatabase/";
+
+    // Ensure directory exists
+    QDir dir(dirPath);
+    if (!dir.exists()) {
+        if (!dir.mkpath(".")) {
+            QMessageBox::warning(this, "保存失败", "无法创建目录: " + dirPath);
+            return;
+        }
+    }
+    if (role == "患者") {
+        QString name = patientNameEdit->text();
+        QString username = patientUsernameEdit->text();
+        QString password = patientPasswordEdit->text();
+        QString confirmPassword = patientConfirmPasswordEdit->text();
+        QString birthdate = patientBirthdateEdit->text();
+        QString idcard = patientIdCardEdit->text();
+        QString phone = patientPhoneEdit->text();
+        QString email = patientEmailEdit->text();
+
+        // 验证空输入
+        if (name.isEmpty() || username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() ||
+            birthdate.isEmpty() || idcard.isEmpty() || phone.isEmpty() || email.isEmpty()) {
+            QMessageBox::warning(this, "输入错误", "所有字段均为必填项！");
+            return;
+        }
+
+        // 验证密码一致性
+        if (password != confirmPassword) {
+            QMessageBox::warning(this, "密码错误", "两次输入的密码不一致！");
+            return;
+        }
+
+        // 格式验证
+        QRegularExpression birthdateRx("^\\d{4}-\\d{2}-\\d{2}$");
+        QRegularExpression phoneRx("^\\d{11}$");
+        QRegularExpression emailRx("^[^@]+@[^@]+\\.[^@]+$");
+        if (!birthdateRx.match(birthdate).hasMatch()) {
+            QMessageBox::warning(this, "格式错误", "出生日期格式应为 YYYY-MM-DD！");
+            return;
+        }
+        if (idcard.length() != 18) {
+            QMessageBox::warning(this, "格式错误", "身份证号应为18位！");
+            return;
+        }
+        if (!phoneRx.match(phone).hasMatch()) {
+            QMessageBox::warning(this, "格式错误", "手机号应为11位数字！");
+            return;
+        }
+        if (!emailRx.match(email).hasMatch()) {
+            QMessageBox::warning(this, "格式错误", "请输入有效的邮箱地址！");
+            return;
+        }
+
+        // 收集参数
+        parameters["姓名"] = name;
+        parameters["用户名"] = username;
+        parameters["密码"] = password;
+        parameters["出生日期"] = birthdate;
+        parameters["身份证号"] = idcard;
+        parameters["手机号"] = phone;
+        parameters["邮箱"] = email;
+
+        // 保存到文件
+        QString filename = "patient_parameters.txt";
+        QFile file(dirPath + filename);
+        if (file.open(QIODevice::Append | QIODevice::Text)) {
+            QTextStream out(&file);
+            out << "---- 新记录 ----\n";
+            for (auto it = parameters.constBegin(); it != parameters.constEnd(); ++it) {
+                out << it.key() << ": " << it.value() << "\n";
+            }
+            file.close();
+            QMessageBox::information(this, "保存成功", "参数已保存到 " + dirPath + filename);
+        } else {
+            QMessageBox::warning(this, "保存失败", "无法写入文件 " + dirPath + filename + ": " + file.errorString());
+            return;
+        }
 
 
-    // 提示：验证密码和确认密码是否一致
-    bool isEmpty = (registerUsername.isEmpty()||registerPassword.isEmpty()||confirmPassword.isEmpty());
-    if(isEmpty){
-        QMessageBox::warning(this,"mistake",
-                                 "the username/password is empty, please rewrite");
-        return;
 
-    };
-    if(!(registerPassword == confirmPassword)){
-        QMessageBox::warning(this,"mistake","the password is incorrect");
-        return;
-    };
+        // TODO: 保存患者注册信息到数据库
+        // - 字段：name, username, password, birthdate, idcard, phone, email
 
 
-    // 提示：显示注册成功或失败的消息（使用QMessageBox）
-        QMessageBox::information(this,"message","sucess");
 
-    // 提示：可选 - 将数据保存到数据库或文件
+        QMessageBox::information(this, "注册成功", "患者注册成功（已保存到 patient_parameters.txt）！");
+    } else {
+        QString name = doctorNameEdit->text();
+        QString username = doctorUsernameEdit->text();
+        QString password = doctorPasswordEdit->text();
+        QString confirmPassword = doctorConfirmPasswordEdit->text();
+        QString employeeId = doctorEmployeeIdEdit->text();
+        QString department = doctorDepartmentCombo->currentText();
+        QString photoPath = doctorPhotoEdit->text();
+
+        // 验证空输入
+        if (name.isEmpty() || username.isEmpty() || password.isEmpty() || confirmPassword.isEmpty() ||
+            employeeId.isEmpty() || department.isEmpty()) {
+            QMessageBox::warning(this, "输入错误", "除照片外，所有字段均为必填项！");
+            return;
+        }
+
+        // 验证密码一致性
+        if (password != confirmPassword) {
+            QMessageBox::warning(this, "密码错误", "两次输入的密码不一致！");
+            return;
+        }
+
+        // 收集参数
+        parameters["姓名"] = name;
+        parameters["用户名"] = username;
+        parameters["密码"] = password;
+        parameters["工号"] = employeeId;
+        parameters["科室"] = department;
+        if (!photoPath.isEmpty()) {
+            parameters["照片"] = photoPath;
+        }
+
+        // 保存到文件
+        QString filename = "doctor_parameters.txt";
+        QFile file(dirPath + filename);
+        if (file.open(QIODevice::Append | QIODevice::Text)) {
+            QTextStream out(&file);
+            out << "---- 新记录 ----\n";
+            for (auto it = parameters.constBegin(); it != parameters.constEnd(); ++it) {
+                out << it.key() << ": " << it.value() << "\n";
+            }
+            file.close();
+            QMessageBox::information(this, "保存成功", "参数已保存到 " + dirPath + filename);
+        } else {
+            QMessageBox::warning(this, "保存失败", "无法写入文件 " + dirPath + filename + ": " + file.errorString());
+            return;
+        }
+
+        // TODO: 保存医生注册信息到数据库
+        // - 字段：name, username, password, employee_id, department, photo_path
+        QMessageBox::information(this, "注册成功", "医生注册成功（已保存到 doctor_parameters.txt）！");
+    }
 }
 
 void RegisterWindow::onBackToLoginClicked()
 {
-    // 提示：关闭当前窗口并返回登录窗口
     parentWidget()->show();
     this->close();
-    // 提示：可选 - 发射信号通知LoginWindow显示
 }

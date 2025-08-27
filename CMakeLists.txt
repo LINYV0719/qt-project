@@ -17,17 +17,27 @@ set(PROJECT_SOURCES
         loginwindow.cpp
         loginwindow.h
         loginwindow.ui
+        doctormainwindow.h
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(loginAndRegister
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        registerwindow.h
-        registerwindow.cpp
+
+
         main.cpp
-        resetpasswordwindow.h
+        registerwindow.cpp
         resetpasswordwindow.cpp
+        doctormainwindow.h
+        admissionstatuswindow.cpp
+        doctormainwindow.cpp
+        patientinfowindow.cpp
+        punchleavewindow.cpp
+        receptionwindow.cpp
+        registrationinfowindow.cpp
+
+
 
 
     )
